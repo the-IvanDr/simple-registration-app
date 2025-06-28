@@ -1,8 +1,46 @@
 import { Request, Response, Router } from "express";
 import { CreateUserDto, UserService } from "../services/user.service";
+import { validateCreateUserDto, validatePhoneNumber } from "./user-validation";
 
 const router = Router();
 
+// Get user by phone number
+router.get(
+  "/:phoneNumber",
+  async (req: Request<{ phoneNumber: string }>, res: Response) => {
+    try {
+      const { phoneNumber } = req.params;
+
+      const validationErrors = validatePhoneNumber(phoneNumber);
+      if (validationErrors.length > 0) {
+        res.status(400).json({
+          message: "Phone number is invalid",
+          errors: validationErrors,
+        });
+        return;
+      }
+
+      const user = await UserService.findByPhoneNumber(phoneNumber);
+
+      if (!user) {
+        res.status(404).json({
+          message: "User not found",
+          errors: ["No user found with the provided phone number"],
+        });
+        return;
+      }
+
+      res.status(200).json(user);
+    } catch (err) {
+      res.status(500).json({
+        message: "Failed to retrieve user",
+        errors: [err instanceof Error ? err.message : String(err)],
+      });
+    }
+  }
+);
+
+// Create user
 router.post("/", async (req: Request<{}, {}, CreateUserDto>, res: Response) => {
   try {
     const validationErrors = validateCreateUserDto(req.body);
@@ -24,23 +62,5 @@ router.post("/", async (req: Request<{}, {}, CreateUserDto>, res: Response) => {
     });
   }
 });
-
-function validateCreateUserDto(dto: CreateUserDto): string[] {
-  const errors: string[] = [];
-
-  if (typeof dto.name !== "string" || dto.name.trim().length === 0) {
-    errors.push("Name must be a non-empty string");
-  }
-
-  if (typeof dto.phoneNumber !== "string" || dto.phoneNumber.length !== 12) {
-    errors.push("Phone number must be a string with exactly 12 characters");
-  }
-
-  if (typeof dto.address !== "string" || dto.address.trim().length === 0) {
-    errors.push("Address must be a non-empty string");
-  }
-
-  return errors;
-}
 
 export default router;
