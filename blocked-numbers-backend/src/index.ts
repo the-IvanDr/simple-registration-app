@@ -17,7 +17,7 @@ app.get("/blocked-numbers", (_req, res) => {
     "380964832170",
   ];
 
-  res.json({ phoneNumbers });
+  res.json(phoneNumbers);
 });
 
 app.listen(port, () => {
