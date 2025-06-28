@@ -13,8 +13,16 @@ export class UserService {
       throw new Error("Phone number is blocked");
     }
 
-    const user = new UserModel(data);
-    return user.save();
+    try {
+      const user = new UserModel(data);
+      return await user.save();
+    } catch (error: any) {
+      const DUPLICATE_KEY_ERROR_CODE = 11000;
+      if (error.code === DUPLICATE_KEY_ERROR_CODE) {
+        throw new Error("User with this phone number already exists");
+      }
+      throw error;
+    }
   }
 
   static async findByPhoneNumber(phoneNumber: string): Promise<IUser | null> {
