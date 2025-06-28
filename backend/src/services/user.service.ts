@@ -1,4 +1,5 @@
 import { UserModel, IUser } from "../models/user.model";
+import { BlockedNumbersService } from "./blocked-numbers.service";
 
 export interface CreateUserDto {
   name: string;
@@ -8,6 +9,10 @@ export interface CreateUserDto {
 
 export class UserService {
   static async createUser(data: CreateUserDto): Promise<IUser> {
+    if (await BlockedNumbersService.isBlocked(data.phoneNumber)) {
+      throw new Error("Phone number is blocked");
+    }
+
     const user = new UserModel(data);
     return user.save();
   }

@@ -8,7 +8,9 @@ router.post("/", async (req: Request<{}, {}, CreateUserDto>, res: Response) => {
     const user = await UserService.createUser(req.body);
     res.status(201).json(user);
   } catch (err) {
-    res.status(500).json({ message: "Error creating user", error: err });
+    res.status(500).json({
+      message: err instanceof Error ? err.message : String(err),
+    });
   }
 });
 
