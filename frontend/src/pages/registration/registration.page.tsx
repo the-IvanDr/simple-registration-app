@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Link } from "react-router";
+import { Link, Navigate, useNavigate } from "react-router";
 import {
   Box,
   Text,
@@ -9,6 +9,7 @@ import {
   VStack,
   Heading,
 } from "@chakra-ui/react";
+import { useUser } from "@/api/hooks/useUser.hook";
 
 interface FieldState {
   value: string;
@@ -22,6 +23,11 @@ interface RegistrationFormState {
 }
 
 export function RegistrationPage() {
+  const navigate = useNavigate();
+
+  const { createUser, isLogin } = useUser();
+
+  const [generalErrorMessage, setGeneralErrorMessage] = useState<string>("");
   const [formData, setFormData] = useState<RegistrationFormState>({
     name: { value: "", error: "" },
     phone: { value: "", error: "" },
@@ -63,16 +69,26 @@ export function RegistrationPage() {
     return valid;
   };
 
-  const handleSubmit = (e: React.FormEvent): void => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (validateForm()) {
-      console.log("Submitted Data:", {
+      const response = await createUser({
         name: formData.name.value,
-        phone: formData.phone.value,
+        phoneNumber: formData.phone.value,
         address: formData.address.value,
       });
+
+      if (response.errors && response.errors.length > 0) {
+        setGeneralErrorMessage(response.errors[0]);
+      } else {
+        navigate("/profile");
+      }
     }
   };
+
+  if (isLogin) {
+    return <Navigate to="/profile" />;
+  }
 
   return (
     <Box
@@ -87,6 +103,12 @@ export function RegistrationPage() {
       <Heading mb={6} size="lg" textAlign="center">
         Register
       </Heading>
+
+      {generalErrorMessage && (
+        <Text mb={4} color="red.500">
+          {generalErrorMessage}
+        </Text>
+      )}
 
       <form onSubmit={handleSubmit}>
         <VStack>

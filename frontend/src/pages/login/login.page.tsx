@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Link } from "react-router";
+import { Link, Navigate, useNavigate } from "react-router";
 import {
   Box,
   Button,
@@ -9,6 +9,7 @@ import {
   Heading,
   Text,
 } from "@chakra-ui/react";
+import { useUser } from "@/api/hooks/useUser.hook";
 
 interface PhoneNumberField {
   value: string;
@@ -16,6 +17,11 @@ interface PhoneNumberField {
 }
 
 export function LoginPage() {
+  const navigate = useNavigate();
+
+  const { getUserByPhoneNumber, isLogin } = useUser();
+
+  const [generalErrorMessage, setGeneralErrorMessage] = useState<string>("");
   const [phoneNumber, setPhoneNumber] = useState<PhoneNumberField>({
     value: "",
     error: "",
@@ -44,12 +50,22 @@ export function LoginPage() {
     return true;
   };
 
-  const handleSubmit = (e: React.FormEvent): void => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (validate()) {
-      console.log("Login with phone number:", phoneNumber.value);
+      const response = await getUserByPhoneNumber(phoneNumber.value);
+
+      if (response.errors && response.errors.length > 0) {
+        setGeneralErrorMessage(response.errors[0]);
+      } else {
+        navigate("/profile");
+      }
     }
   };
+
+  if (isLogin) {
+    return <Navigate to="/profile" />;
+  }
 
   return (
     <Box
@@ -64,6 +80,12 @@ export function LoginPage() {
       <Heading mb={6} size="lg" textAlign="center">
         Login
       </Heading>
+
+      {generalErrorMessage && (
+        <Text mb={4} color="red.500">
+          {generalErrorMessage}
+        </Text>
+      )}
 
       <form onSubmit={handleSubmit}>
         <VStack>

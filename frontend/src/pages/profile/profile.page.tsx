@@ -1,16 +1,29 @@
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router";
 import { Box, Heading, Text, Button, VStack } from "@chakra-ui/react";
 import { UserModel } from "@/models/user.model";
-
-const user: UserModel = {
-  _id: "1",
-  name: "John Doe",
-  address: "123 Main St, Anytown, USA",
-  phoneNumber: "123-456-7890",
-};
+import { LocalStorageService } from "@/services/local-storage.service";
+import { useUser } from "@/api/hooks/useUser.hook";
 
 export function ProfilePage() {
+  const navigate = useNavigate();
+
+  const { logout } = useUser();
+
+  const [user, setUser] = useState<UserModel | null>(null);
+
+  useEffect(() => {
+    const userData = LocalStorageService.getUser();
+    if (userData) {
+      setUser(userData);
+    } else {
+      navigate("/registration");
+    }
+  }, []);
+
   const onLogout = () => {
-    console.log("Logout()");
+    logout();
+    navigate("/login");
   };
 
   return (
@@ -29,15 +42,15 @@ export function ProfilePage() {
         </Heading>
         <Box>
           <Text fontWeight="bold">Name:</Text>
-          <Text fontStyle="italic">{user.name}</Text>
+          <Text fontStyle="italic">{user?.name}</Text>
         </Box>
         <Box>
           <Text fontWeight="bold">Address:</Text>
-          <Text fontStyle="italic">{user.address}</Text>
+          <Text fontStyle="italic">{user?.address}</Text>
         </Box>
         <Box>
           <Text fontWeight="bold">Phone Number:</Text>
-          <Text fontStyle="italic">{user.phoneNumber}</Text>
+          <Text fontStyle="italic">{user?.phoneNumber}</Text>
         </Box>
         <Button mt={4} onClick={onLogout}>
           Logout
